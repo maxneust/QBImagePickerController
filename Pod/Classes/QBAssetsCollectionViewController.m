@@ -64,7 +64,7 @@
     
     // Validation
     if (self.allowsMultipleSelection) {
-        self.navigationItem.rightBarButtonItem.enabled = [self validateNumberOfSelections:self.imagePickerController.selectedAssetURLs.count];
+        self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:self.imagePickerController.selectedAssetURLs.count];
     }
 }
 
@@ -298,12 +298,12 @@
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return CGSizeMake(77.5, 77.5);
+    return CGSizeMake(103.33, 103.33);
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
 {
-    return UIEdgeInsetsMake(2, 2, 2, 2);
+    return UIEdgeInsetsMake(2.5, 2.5, 2.5, 2.5);
 }
 
 - (BOOL)collectionView:(UICollectionView *)collectionView shouldSelectItemAtIndexPath:(NSIndexPath *)indexPath
@@ -317,7 +317,7 @@
     
     // Validation
     if (self.allowsMultipleSelection) {
-        self.navigationItem.rightBarButtonItem.enabled = [self validateNumberOfSelections:(self.imagePickerController.selectedAssetURLs.count + 1)];
+        self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:(self.imagePickerController.selectedAssetURLs.count + 1)];
     }
     
     // Delegate
@@ -332,7 +332,7 @@
     
     // Validation
     if (self.allowsMultipleSelection) {
-        self.navigationItem.rightBarButtonItem.enabled = [self validateNumberOfSelections:(self.imagePickerController.selectedAssetURLs.count - 1)];
+        self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:(self.imagePickerController.selectedAssetURLs.count - 1)];
     }
     
     // Delegate

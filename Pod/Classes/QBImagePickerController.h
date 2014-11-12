@@ -30,7 +30,7 @@ UIKIT_EXTERN ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterTyp
 
 @interface QBImagePickerController : UITableViewController
 
-@property (nonatomic, strong, readonly) ALAssetsLibrary *assetsLibrary;
+@property (nonatomic, strong, readwrite) ALAssetsLibrary *assetsLibrary;
 @property (nonatomic, copy, readonly) NSArray *assetsGroups;
 @property (nonatomic, strong, readonly) NSMutableOrderedSet *selectedAssetURLs;
 
@@ -39,6 +39,7 @@ UIKIT_EXTERN ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterTyp
 @property (nonatomic, assign) QBImagePickerControllerFilterType filterType;
 @property (nonatomic, assign) BOOL showsCancelButton;
 @property (nonatomic, assign) BOOL allowsMultipleSelection;
+@property (nonatomic, assign) BOOL allowsEmptySelection;
 @property (nonatomic, assign) NSUInteger minimumNumberOfSelection;
 @property (nonatomic, assign) NSUInteger maximumNumberOfSelection;
 

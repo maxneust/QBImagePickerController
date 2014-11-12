@@ -20,8 +20,8 @@
     self = [super init];
     
     if (self) {
-        self.minimumLineSpacing = 2.0;
-        self.minimumInteritemSpacing = 2.0;
+        self.minimumLineSpacing = 2.5;
+        self.minimumInteritemSpacing = 2.5;
     }
     
     return self;

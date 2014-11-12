@@ -34,7 +34,6 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
 
 @interface QBImagePickerController () <QBAssetsCollectionViewControllerDelegate>
 
-@property (nonatomic, strong, readwrite) ALAssetsLibrary *assetsLibrary;
 @property (nonatomic, copy, readwrite) NSArray *assetsGroups;
 @property (nonatomic, strong, readwrite) NSMutableOrderedSet *selectedAssetURLs;
 
@@ -114,7 +113,7 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
                          }];
     
     // Validation
-    self.navigationItem.rightBarButtonItem.enabled = [self validateNumberOfSelections:self.selectedAssetURLs.count];
+    self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:self.selectedAssetURLs.count];
 }
 
 
@@ -257,7 +256,9 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
 {
     // Load assets from URLs
     __block NSMutableArray *assets = [NSMutableArray array];
-    
+    if (allowsEmptySelection && self.selectedAssetURLs.count == 0) {
+        [self doPassSelectedAssetsToDelegate:[assets copy]];
+    }
     for (NSURL *selectedAssetURL in self.selectedAssetURLs) {
         __weak typeof(self) weakSelf = self;
         [self.assetsLibrary assetForURL:selectedAssetURL
@@ -267,10 +268,7 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
                                 
                                 // Check if the loading finished
                                 if (assets.count == weakSelf.selectedAssetURLs.count) {
-                                    // Delegate
-                                    if (self.delegate && [self.delegate respondsToSelector:@selector(qb_imagePickerController:didSelectAssets:)]) {
-										[self.delegate qb_imagePickerController:self didSelectAssets:[assets copy]];
-                                    }
+                                    [self doPassSelectedAssetsToDelegate:[assets copy]];
                                 }
                             } failureBlock:^(NSError *error) {
                                 NSLog(@"Error: %@", [error localizedDescription]);
@@ -278,6 +276,12 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
     }
 }
 
+- (void)doPassSelectedAssetsToDelegate:(NSArray *)assets
+{
+    if (self.delegate && [self.delegate respondsToSelector:@selector(qb_imagePickerController:didSelectAssets:)]) {
+        [self.delegate qb_imagePickerController:self didSelectAssets:assets];
+    }
+}
 
 #pragma mark - UITableViewDataSource
 
@@ -315,6 +319,7 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
     assetsCollectionViewController.imagePickerController = self;
     assetsCollectionViewController.filterType = self.filterType;
     assetsCollectionViewController.allowsMultipleSelection = self.allowsMultipleSelection;
+    assetsCollectionViewController.allowsEmptySelection = self.allowsEmptySelection;
     assetsCollectionViewController.minimumNumberOfSelection = self.minimumNumberOfSelection;
     assetsCollectionViewController.maximumNumberOfSelection = self.maximumNumberOfSelection;
     
@@ -340,7 +345,7 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
         [self.selectedAssetURLs addObject:assetURL];
         
         // Validation
-        self.navigationItem.rightBarButtonItem.enabled = [self validateNumberOfSelections:self.selectedAssetURLs.count];
+        self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:self.selectedAssetURLs.count];
     } else {
         // Delegate
         if (self.delegate && [self.delegate respondsToSelector:@selector(qb_imagePickerController:didSelectAsset:)]) {
@@ -357,7 +362,7 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
         [self.selectedAssetURLs removeObject:assetURL];
         
         // Validation
-        self.navigationItem.rightBarButtonItem.enabled = [self validateNumberOfSelections:self.selectedAssetURLs.count];
+        self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:self.selectedAssetURLs.count];
     }
 }
 

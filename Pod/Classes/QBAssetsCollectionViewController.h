@@ -31,6 +31,7 @@
 @property (nonatomic, strong) ALAssetsGroup *assetsGroup;
 @property (nonatomic, assign) QBImagePickerControllerFilterType filterType;
 @property (nonatomic, assign) BOOL allowsMultipleSelection;
+@property (nonatomic, assign) BOOL allowsEmptySelection;
 @property (nonatomic, assign) NSUInteger minimumNumberOfSelection;
 @property (nonatomic, assign) NSUInteger maximumNumberOfSelection;
 
