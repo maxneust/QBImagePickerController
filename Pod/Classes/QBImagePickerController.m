@@ -256,7 +256,7 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
 {
     // Load assets from URLs
     __block NSMutableArray *assets = [NSMutableArray array];
-    if (allowsEmptySelection && self.selectedAssetURLs.count == 0) {
+    if (self.allowsEmptySelection && self.selectedAssetURLs.count == 0) {
         [self doPassSelectedAssetsToDelegate:[assets copy]];
     }
     for (NSURL *selectedAssetURL in self.selectedAssetURLs) {
