@@ -259,16 +259,39 @@ ALAssetsFilter * ALAssetsFilterFromQBImagePickerControllerFilterType(QBImagePick
     if (self.allowsEmptySelection && self.selectedAssetURLs.count == 0) {
         [self doPassSelectedAssetsToDelegate:[assets copy]];
     }
+
+    __weak typeof(self) weakSelf = self;
+
+    void (^assetFoundBlock)(ALAsset *asset);
+    assetFoundBlock = ^void(ALAsset *asset) {
+        // Add asset
+        [assets addObject:asset];
+        
+        // Check if the loading finished
+        if (assets.count == weakSelf.selectedAssetURLs.count) {
+            [self doPassSelectedAssetsToDelegate:[assets copy]];
+        }
+    };
+
     for (NSURL *selectedAssetURL in self.selectedAssetURLs) {
-        __weak typeof(self) weakSelf = self;
         [self.assetsLibrary assetForURL:selectedAssetURL
                             resultBlock:^(ALAsset *asset) {
-                                // Add asset
-                                [assets addObject:asset];
-                                
-                                // Check if the loading finished
-                                if (assets.count == weakSelf.selectedAssetURLs.count) {
-                                    [self doPassSelectedAssetsToDelegate:[assets copy]];
+                                if (asset) {
+                                    assetFoundBlock(asset);
+                                } else {
+                                    // On iOS 8.1 [library assetForUrl] Photo Streams always returns nil. Try to obtain it in an alternative way.
+                                    // TODO: this is not performant, goes through ALL photos until a match is found!
+                                    [self.assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupPhotoStream usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
+                                         [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
+                                             if([result.defaultRepresentation.url isEqual:selectedAssetURL])
+                                             {
+                                                 assetFoundBlock(result);
+                                                 *stop = YES;
+                                             }
+                                         }];
+                                     } failureBlock:^(NSError *error) {
+                                         NSLog(@"Error: Cannot load asset from photo stream - %@", [error localizedDescription]);
+                                     }];
                                 }
                             } failureBlock:^(NSError *error) {
                                 NSLog(@"Error: %@", [error localizedDescription]);
