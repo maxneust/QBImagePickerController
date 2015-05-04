@@ -12,6 +12,9 @@
 #import "QBAssetsCollectionViewCell.h"
 #import "QBAssetsCollectionFooterView.h"
 
+#define ITEMS_PER_ROW 3
+#define ITEM_INSET 2.5f
+
 @interface QBAssetsCollectionViewController ()
 
 @property (nonatomic, strong) NSMutableArray *assets;
@@ -298,12 +301,13 @@
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return CGSizeMake(103.33, 103.33);
+    CGFloat itemSize = ([UIScreen mainScreen].bounds.size.width - ITEM_INSET*(ITEMS_PER_ROW+1)) / ITEMS_PER_ROW;
+    return CGSizeMake(itemSize, itemSize);
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
 {
-    return UIEdgeInsetsMake(2.5, 2.5, 2.5, 2.5);
+    return UIEdgeInsetsMake(ITEM_INSET, ITEM_INSET, ITEM_INSET, ITEM_INSET);
 }
 
 - (BOOL)collectionView:(UICollectionView *)collectionView shouldSelectItemAtIndexPath:(NSIndexPath *)indexPath
