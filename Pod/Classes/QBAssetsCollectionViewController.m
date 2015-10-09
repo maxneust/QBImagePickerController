@@ -32,11 +32,11 @@
 - (instancetype)initWithCollectionViewLayout:(UICollectionViewLayout *)layout
 {
     self = [super initWithCollectionViewLayout:layout];
-    
+
     if (self) {
         // View settings
         self.collectionView.backgroundColor = [UIColor whiteColor];
-        
+
         // Register cell class
         [self.collectionView registerClass:[QBAssetsCollectionViewCell class]
                 forCellWithReuseIdentifier:@"AssetsCell"];
@@ -44,44 +44,42 @@
                 forSupplementaryViewOfKind:UICollectionElementKindSectionFooter
                        withReuseIdentifier:@"FooterView"];
     }
-    
+
     return self;
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
-    // Scroll to bottom
-    if (self.isMovingToParentViewController && !self.disableScrollToBottom) {
-        CGFloat topInset;
-        if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) { // iOS7 or later
-            topInset = ((self.edgesForExtendedLayout && UIRectEdgeTop) && (self.collectionView.contentInset.top == 0)) ? (20.0 + 44.0) : 0.0;
-        } else {
-            topInset = (self.collectionView.contentInset.top == 0) ? (20.0 + 44.0) : 0.0;
-        }
 
-        [self.collectionView setContentOffset:CGPointMake(0, self.collectionView.collectionViewLayout.collectionViewContentSize.height - self.collectionView.frame.size.height + topInset)
-                                     animated:NO];
-    }
-    
     // Validation
     if (self.allowsMultipleSelection) {
         self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:self.imagePickerController.selectedAssetURLs.count];
     }
 }
 
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    // Scroll to bottom
+    if (self.numberOfAssets > 0 && self.isMovingToParentViewController && !self.disableScrollToBottom) {
+        NSIndexPath *indexPath = [NSIndexPath indexPathForItem:(self.numberOfAssets - 1) inSection:0];
+        NSLog(@"Index path: %@", indexPath);
+        [self.collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    }
+}
+
 - (void)viewWillDisappear:(BOOL)animated
 {
     [super viewWillDisappear:animated];
-    
+
     self.disableScrollToBottom = YES;
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
-    
+
     self.disableScrollToBottom = NO;
 }
 
@@ -91,7 +89,7 @@
 - (void)setFilterType:(QBImagePickerControllerFilterType)filterType
 {
     _filterType = filterType;
-    
+
     // Set assets filter
     [self.assetsGroup setAssetsFilter:ALAssetsFilterFromQBImagePickerControllerFilterType(self.filterType)];
 }
@@ -99,36 +97,36 @@
 - (void)setAssetsGroup:(ALAssetsGroup *)assetsGroup
 {
     _assetsGroup = assetsGroup;
-    
+
     // Set title
     self.title = [self.assetsGroup valueForProperty:ALAssetsGroupPropertyName];
-    
+
     // Set assets filter
     [self.assetsGroup setAssetsFilter:ALAssetsFilterFromQBImagePickerControllerFilterType(self.filterType)];
-    
+
     // Load assets
     NSMutableArray *assets = [NSMutableArray array];
     __block NSUInteger numberOfAssets = 0;
     __block NSUInteger numberOfPhotos = 0;
     __block NSUInteger numberOfVideos = 0;
-    
+
     [self.assetsGroup enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
         if (result) {
             numberOfAssets++;
-            
+
             NSString *type = [result valueForProperty:ALAssetPropertyType];
             if ([type isEqualToString:ALAssetTypePhoto]) numberOfPhotos++;
             else if ([type isEqualToString:ALAssetTypeVideo]) numberOfVideos++;
-            
+
             [assets addObject:result];
         }
     }];
-    
+
     self.assets = assets;
     self.numberOfAssets = numberOfAssets;
     self.numberOfPhotos = numberOfPhotos;
     self.numberOfVideos = numberOfVideos;
-    
+
     // Update view
     [self.collectionView reloadData];
 }
@@ -136,7 +134,7 @@
 - (void)setAllowsMultipleSelection:(BOOL)allowsMultipleSelection
 {
     self.collectionView.allowsMultipleSelection = allowsMultipleSelection;
-    
+
     // Show/hide done button
     if (allowsMultipleSelection) {
         UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done:)];
@@ -170,11 +168,11 @@
     for (NSInteger i = 0; i < self.assets.count; i++) {
         ALAsset *asset = self.assets[i];
         NSURL *assetURL = [asset valueForProperty:ALAssetPropertyAssetURL];
-        
+
         if ([assetURL isEqual:URL]) {
             NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
             [self.collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone];
-            
+
             return;
         }
     }
@@ -187,23 +185,23 @@
 {
     NSUInteger minimumNumberOfSelection = MAX(1, self.minimumNumberOfSelection);
     BOOL qualifiesMinimumNumberOfSelection = (numberOfSelections >= minimumNumberOfSelection);
-    
+
     BOOL qualifiesMaximumNumberOfSelection = YES;
     if (minimumNumberOfSelection <= self.maximumNumberOfSelection) {
         qualifiesMaximumNumberOfSelection = (numberOfSelections <= self.maximumNumberOfSelection);
     }
-    
+
     return (qualifiesMinimumNumberOfSelection && qualifiesMaximumNumberOfSelection);
 }
 
 - (BOOL)validateMaximumNumberOfSelections:(NSUInteger)numberOfSelections
 {
     NSUInteger minimumNumberOfSelection = MAX(1, self.minimumNumberOfSelection);
-    
+
     if (minimumNumberOfSelection <= self.maximumNumberOfSelection) {
         return (numberOfSelections <= self.maximumNumberOfSelection);
     }
-    
+
     return YES;
 }
 
@@ -224,10 +222,10 @@
 {
     QBAssetsCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AssetsCell" forIndexPath:indexPath];
     cell.showsOverlayViewWhenSelected = self.allowsMultipleSelection;
-    
+
     ALAsset *asset = self.assets[indexPath.row];
     cell.asset = asset;
-    
+
     return cell;
 }
 
@@ -242,7 +240,7 @@
         QBAssetsCollectionFooterView *footerView = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionFooter
                                                                                       withReuseIdentifier:@"FooterView"
                                                                                              forIndexPath:indexPath];
-        
+
         switch (self.filterType) {
             case QBImagePickerControllerFilterTypeNone:{
                 NSString *format;
@@ -277,7 +275,7 @@
                                                                                                   ];
                 break;
             }
-                
+
             case QBImagePickerControllerFilterTypeVideos:{
                 NSString *format = (self.numberOfVideos == 1) ? @"format_video" : @"format_videos";
                 footerView.textLabel.text = [NSString stringWithFormat:NSLocalizedStringFromTableInBundle(format,
@@ -289,10 +287,10 @@
                 break;
             }
         }
-        
+
         return footerView;
     }
-    
+
     return nil;
 }
 
@@ -318,12 +316,12 @@
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     ALAsset *asset = self.assets[indexPath.row];
-    
+
     // Validation
     if (self.allowsMultipleSelection) {
         self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:(self.imagePickerController.selectedAssetURLs.count + 1)];
     }
-    
+
     // Delegate
     if (self.delegate && [self.delegate respondsToSelector:@selector(assetsCollectionViewController:didSelectAsset:)]) {
         [self.delegate assetsCollectionViewController:self didSelectAsset:asset];
@@ -333,12 +331,12 @@
 - (void)collectionView:(UICollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     ALAsset *asset = self.assets[indexPath.row];
-    
+
     // Validation
     if (self.allowsMultipleSelection) {
         self.navigationItem.rightBarButtonItem.enabled = self.allowsEmptySelection || [self validateNumberOfSelections:(self.imagePickerController.selectedAssetURLs.count - 1)];
     }
-    
+
     // Delegate
     if (self.delegate && [self.delegate respondsToSelector:@selector(assetsCollectionViewController:didDeselectAsset:)]) {
         [self.delegate assetsCollectionViewController:self didDeselectAsset:asset];
